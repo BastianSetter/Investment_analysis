@@ -1,4 +1,4 @@
-from data.file_loading import DATE_FORMAT
+from data.file_loading import DATE_FORMAT, load_data
 from datetime import datetime
 import numpy as np
 
@@ -9,9 +9,10 @@ def get_investment_length(buy_date:str, sell_date:str):
         return delta.days
 
 class Investment():
-    def __init__(self, investent_price_history:np.ndarray) -> None:
-        self.price = investent_price_history[0,:]
-        self.dates = investent_price_history[1,:]
+    def __init__(self, key:str, ratio:float) -> None:
+        self.dates, self.price = load_data(key)
+        self.total_amount = 0
+        self.target_ratio = ratio
 
     def get_price_from_date(self, date:str) -> float:
         index = np.argwhere(self.dates==date)[0][0]
@@ -25,17 +26,17 @@ class Investment():
         return roi
     
     def calculate_sell_cost():
-        pass
+        ...
     
     def calculate_buy_cost():
-        pass
+        ...
 
     def calculate_hold_cost():
-        pass
+        ...
 
 
 class Share(Investment):
-    def __init__(self, share_price_history) -> None:
-        super().__init__()
+    def __init__(self, key: str) -> None:
+        super().__init__(key)
 
 

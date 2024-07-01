@@ -3,6 +3,7 @@ from datetime import datetime
 from dataclasses import dataclass
 from collections import deque
 import numpy as np
+from abc import ABC, abstractmethod
 
 
 @dataclass
@@ -24,7 +25,7 @@ def get_hold_time(buy_date:datetime, sell_date:datetime):
     delta = sell_date - buy_date
     return delta.days
 
-class Investment():
+class Investment(ABC):
     def __init__(self, key:str, ratio:float, ongoing_cost:float = 0) -> None:
         self.dates, self.price = load_data(key)
         self.total_amount = 0
@@ -56,7 +57,7 @@ class Investment():
         remaining_amount = amount
         combined_tax = 0
         sell_price = self.get_price_from_date(date)
-        combined_fee = self.calculate_sell_fee(sell_price, amount)
+        combined_fee = self.calculate_sell_fee(sell_price * amount)
 
         while remaining_amount > 0:
             first_order = self.open_orders[0]
@@ -73,28 +74,47 @@ class Investment():
 
         sell_order = HistoryOrder(self.key_name, date, amount, sell_price, combined_fee, combined_tax)
         return sell_order
+    
+    def buy_amount(self, amount, date):
+        buy_price = self.get_price_from_date(date)
+        cash_estimate = buy_price*amount
+        fee_estimate = self.calculate_buy_fee(cash_estimate)
+        final_amount = (cash_estimate-fee_estimate)/buy_price
 
+        open_order = OngoiningOrder(date, final_amount, buy_price)
+        self.open_orders.append(open_order)
+
+        buy_order = HistoryOrder(self.key_name, date, final_amount, buy_price, fee_estimate, 0)
+        return buy_order
+
+    @abstractmethod
     def calculate_sell_tax(self, buy_price, sell_price, amount)-> float:
         ...
 
-    def calculate_sell_fee(self, sell_price, amount)-> float:
-        ...
-    
-    def calculate_buy_cost():
+    @abstractmethod
+    def calculate_sell_fee(self, sell_value)-> float:
         ...
 
-    def calculate_hold_cost():
+    @abstractmethod
+    def calculate_buy_fee(self, buy_value)-> float:
         ...
+
+    # @abstractmethod
+    # def calculate_hold_cost():
+    #     ...
 
 
 class Share(Investment):
     def __init__(self, key: str) -> None:
         super().__init__(key)
-
+        self.flat_buy_price = 1
 
     def calculate_sell_tax(self, buy_price, sell_price, amount) -> float:
         gains = (sell_price - buy_price) * amount
         return gains*self.capital_gains_tax
     
-    def calculate_sell_fee(self, sell_price, amount) -> float:
+    def calculate_sell_fee(self, sell_value) -> float:
         return 0
+    
+    def calculate_buy_fee(self, buy_value) -> float:
+        return self.flat_buy_price

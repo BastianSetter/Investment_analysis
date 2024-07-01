@@ -1,7 +1,8 @@
 import numpy as np
-from data.file_loading import DATE_FORMAT
 from investmentclasses import Investment
 from datetime import datetime, timedelta
+
+DATE_FORMAT = "%d.%m.%Y"
 
 def generate_dates(start_date:str, end_date:str):
     start_date = datetime.strptime(start_date, DATE_FORMAT)

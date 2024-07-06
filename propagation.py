@@ -14,8 +14,8 @@ def generate_dates(start_date:str, end_date:str):
 
 
 class Portfolio():
-    def __init__(self, assets:list[Investment]) -> None:#, rebalance_time = 0, rebalance_deviation = 0) -> None:
-        total_ratio = sum(asset.ratio for asset in assets)
+    def __init__(self, assets:list[Investment], initial_cash = 0) -> None:#, rebalance_time = 0, rebalance_deviation = 0) -> None:
+        total_ratio = sum(asset.target_ratio for asset in assets)
         assert np.isclose(total_ratio, 1)
         #TODO: renormalise
         self.assets = assets
@@ -23,7 +23,7 @@ class Portfolio():
         # self.rebalance_deviation = rebalance_deviation
         self.combined_order_history = []
         self.portfolio_history = []
-        self.cash_position = 0
+        self.cash_position = initial_cash
 
     def simulate_timeinterval(self, start_date, end_date):
         self.check_all_assets_valid_in_timeinterval(start_date, end_date)
@@ -34,7 +34,7 @@ class Portfolio():
 
             #handle periodic cash increase and buys
             if date.day == 1:
-                monthly_savings = 500 #TODO: add options for this
+                monthly_savings = 0 #TODO: add options for this
                 self.cash_position += monthly_savings 
 
             #performance tracking for later visualisation
@@ -43,14 +43,14 @@ class Portfolio():
             
             #check for rebalance
             if date.day == 1 and date.month%6 == 1:# adjust to inputsettings
-                self.rebalance(date)
+                 self.rebalance(date)
 
             elif True:#TDOD: more options
                 pass
 
             
     def get_daily_stats(self, date: datetime):
-        stats = [self.cash_position]
+        stats = [date, self.cash_position]
         for asset in self.assets:
             asset_value = asset.total_amount*asset.get_price_from_date(date)
             stats.append(asset_value)
@@ -58,6 +58,9 @@ class Portfolio():
             
 
     def check_all_assets_valid_in_timeinterval(self, start_date, end_date):
+        start_date = datetime.strptime(start_date, DATE_FORMAT)
+        end_date = datetime.strptime(end_date, DATE_FORMAT)
+
         for asset in self.assets:
             if start_date not in asset.dates:
                 raise ValueError(f'Start date "{start_date}" not in asset "{asset.key_name}"!')
@@ -78,6 +81,7 @@ class Portfolio():
         total_value = self.cash_position
         for asset in self.assets:
             asset_value = asset.get_price_from_date(date) * asset.total_amount
+            
             total_value += asset_value
         return total_value
 
@@ -95,9 +99,8 @@ class Portfolio():
     def buy_under_positions(self, total_portfolio_value, date:datetime):
         for asset in self.assets:
             if (rebalance_amount := asset.rebalance_amount(total_portfolio_value, date)) - 0:
-                buy_order = asset.buy_amount(rebalance_amount, date)
+                buy_order = asset.buy_amount(-rebalance_amount, date)
                 self.combined_order_history.append(buy_order)
-
                 used_cash = buy_order.amount*buy_order.order_price-(buy_order.fees+buy_order.tax)
                 self.cash_position -= used_cash
 

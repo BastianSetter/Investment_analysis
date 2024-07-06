@@ -1,4 +1,4 @@
-from data.file_loading import DATE_FORMAT, load_data
+from data.file_loading import load_data
 from datetime import datetime
 from dataclasses import dataclass
 from collections import deque
@@ -71,7 +71,8 @@ class Investment(ABC):
 
             remaining_amount -= sell_amount
             combined_tax += self.calculate_sell_tax(first_order.order_price, sell_price, sell_amount)
-
+        
+        self.total_amount -= amount
         sell_order = HistoryOrder(self.key_name, date, amount, sell_price, combined_fee, combined_tax)
         return sell_order
     
@@ -80,6 +81,7 @@ class Investment(ABC):
         cash_estimate = buy_price*amount
         fee_estimate = self.calculate_buy_fee(cash_estimate)
         final_amount = (cash_estimate-fee_estimate)/buy_price
+        self.total_amount += final_amount
 
         open_order = OngoiningOrder(date, final_amount, buy_price)
         self.open_orders.append(open_order)
@@ -105,8 +107,8 @@ class Investment(ABC):
 
 
 class Share(Investment):
-    def __init__(self, key: str) -> None:
-        super().__init__(key)
+    def __init__(self, key: str, ratio:float) -> None:
+        super().__init__(key, ratio)
         self.flat_buy_price = 1
 
     def calculate_sell_tax(self, buy_price, sell_price, amount) -> float:

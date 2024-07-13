@@ -1,12 +1,13 @@
 import numpy as np
 from investmentclasses import Investment
+from rebalancer import RebalanceTrigger
 from datetime import datetime, timedelta
 
 DATE_FORMAT = "%d.%m.%Y"
 
 def generate_dates(start_date:str, end_date:str):
-    start_date = datetime.strptime(start_date, DATE_FORMAT)
-    end_date = datetime.strptime(end_date, DATE_FORMAT)
+    start_date = datetime.strptime(start_date, DATE_FORMAT).date() 
+    end_date = datetime.strptime(end_date, DATE_FORMAT).date() 
     current_date = start_date
     while current_date <= end_date:
         yield current_date
@@ -19,11 +20,14 @@ class Portfolio():
         assert np.isclose(total_ratio, 1)
         #TODO: renormalise
         self.assets = assets
-        # self.rebalance_time = rebalance_time
-        # self.rebalance_deviation = rebalance_deviation
+        self.rebalance_triggers = []
         self.combined_order_history = []
         self.portfolio_history = []
         self.cash_position = initial_cash
+
+    def add_rebalancer(self, trigger:RebalanceTrigger):
+        self.rebalance_triggers.append(trigger)
+
 
     def simulate_timeinterval(self, start_date, end_date):
         self.check_all_assets_valid_in_timeinterval(start_date, end_date)
@@ -42,11 +46,14 @@ class Portfolio():
             self.portfolio_history.append(daily_stats)
             
             #check for rebalance
-            if date.day == 1 and date.month%6 == 1:# adjust to inputsettings
-                 self.rebalance(date)
+            rebalance_today = False
+            for trigger in self.rebalance_triggers:
+                trigger.check_for_rebalance(date, daily_stats)
 
-            elif True:#TDOD: more options
-                pass
+            if rebalance_today: 
+                self.rebalance(date)
+
+            
 
             
     def get_daily_stats(self, date: datetime):
@@ -58,8 +65,8 @@ class Portfolio():
             
 
     def check_all_assets_valid_in_timeinterval(self, start_date, end_date):
-        start_date = datetime.strptime(start_date, DATE_FORMAT)
-        end_date = datetime.strptime(end_date, DATE_FORMAT)
+        start_date = datetime.strptime(start_date, DATE_FORMAT).date() 
+        end_date = datetime.strptime(end_date, DATE_FORMAT).date() 
 
         for asset in self.assets:
             if start_date not in asset.dates:
@@ -84,7 +91,6 @@ class Portfolio():
             
             total_value += asset_value
         return total_value
-
 
 
     def sell_over_positions(self, total_portfolio_value, date:datetime):

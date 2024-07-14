@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import numpy as np
 import pandas as pd
 import matplotlib.dates as mdates
@@ -34,7 +34,7 @@ def extrapolate_missing_dates(data):
 def load_msci_world():
     df = pd.read_excel(r'C:\Users\basti\PythonScripts\Investment_analysis\data\MSCI_WORLD.xlsx', sheet_name='IE00BJ0KDQ92', skiprows=13)
     dates = df['Date'].values
-    datetime_dates = np.array([datetime.strptime(date, "%d.%m.%Y") for date in dates])
+    datetime_dates = np.array([datetime.strptime(date, "%d.%m.%Y").date() for date in dates])
 
     prices = df['NAV'].values
     return (datetime_dates, prices)
@@ -42,7 +42,7 @@ def load_msci_world():
 def load_msci_em():
     df = pd.read_excel(r'C:\Users\basti\PythonScripts\Investment_analysis\data\MSCI_EM.xlsx', sheet_name='IE00BTJRMP35', skiprows=13)
     dates = df['Date'].values
-    datetime_dates = np.array([datetime.strptime(date, "%d.%m.%Y") for date in dates])
+    datetime_dates = np.array([datetime.strptime(date, "%d.%m.%Y").date()  for date in dates])
 
     prices = df['NAV'].values
     return (datetime_dates, prices)

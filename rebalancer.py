@@ -1,60 +1,45 @@
 import numpy as np
 from datetime import date
 from abc import ABC, abstractmethod
-from enum import Enum
+from triggers import Trigger
 
-class RebalanceTrigger(ABC):
+class Rebalancer():
     def __init__(self) -> None:
-        pass
+        self.triggers = []
 
-    @abstractmethod
-    #TODO correct stat input
-    def check_for_rebalance(self, date:date, daily_stats):
-        ...
+    def add_trigger(self, trigger:Trigger):
+        self.triggers.append(trigger)
 
+    def rebalance(self, date:date, portfolio):
+        #check for rebalance
+        rebalance_today = False
+        for trigger in self.triggers:
+            trigger.check_trigger(date, portfolio)
+        if not rebalance_today: return 
 
+        #TODO: buy and sell can be combined if enough accuracy in cash terms is acchieved (including fees, taxes)
+        # and further preassignment takes place
+        self.sell_over_positions(portfolio, date)
+        self.buy_under_positions(portfolio, date)
 
-class TimeUnit(Enum):
-    DAYS = 'days'
-    WEEKS = 'weeks'
-    MONTHS = 'months'
-    YEARS = 'years'
+    def sell_over_positions(self, portfolio, date:date):
+        total_portfolio_value = portfolio.calculate_total_value(date)
+        new_orders = []
+        for asset in portfolio.assets:
+            if (rebalance_amount := asset.rebalance_amount(total_portfolio_value, date)) > 0:
+                sell_order = asset.sell_amount(rebalance_amount, date)
+                portfolio.combined_order_history.append(sell_order)
+                recieved_cash = sell_order.amount*sell_order.order_price-(sell_order.fees+sell_order.tax)
+                portfolio.cash_position += recieved_cash
 
-class TimeTrigger(RebalanceTrigger):
-    def __init__(self, time_unit: TimeUnit = TimeUnit.MONTHS, time_interval: int = 6, reference_date: date = date(2024,1,7)) -> None:
-        self.time_unit = time_unit
-        self.time_interval = time_interval
-        self.reference_date = reference_date
-
-    def check_for_rebalance(self, date: date, daily_stats) -> bool:
-        
-        match self.time_unit:
-            case TimeUnit.DAYS:
-                delta_days = (date - self.reference_date).days
-                return delta_days % self.time_interval == 0
-        
-            case TimeUnit.WEEKS:
-                delta_weeks = (date - self.reference_date).days / 7
-                return delta_weeks % self.time_interval == 0
-    
-            case TimeUnit.MONTHS:
-                if date.day != self.reference_date.day:
-                    return False
-                
-                delta_months = (date.year - self.reference_date.year) * 12 + (date.month - self.reference_date.month)
-                return delta_months % self.time_interval == 0
-
-            case TimeUnit.YEARS:
-                if date.day != self.reference_date.day:
-                    return False
-                if date.month != self.reference_date.month:
-                    return False
-                
-                delta_years = date.year - self.reference_date.year
-                return delta_years % self.time_interval == 0
+            
+    def buy_under_positions(self, portfolio, date:date):
+        total_portfolio_value = portfolio.calculate_total_value(date)
+        for asset in portfolio.assets:
+            if (rebalance_amount := asset.rebalance_amount(total_portfolio_value, date)) - 0:
+                buy_order = asset.buy_amount(-rebalance_amount, date)
+                portfolio.combined_order_history.append(buy_order)
+                used_cash = buy_order.amount*buy_order.order_price-(buy_order.fees+buy_order.tax)
+                portfolio.cash_position -= used_cash
 
 
-
-class DeviationTrigger(RebalanceTrigger):
-    def __init__(self) -> None:
-        super().__init__()

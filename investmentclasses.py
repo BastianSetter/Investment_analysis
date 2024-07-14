@@ -51,7 +51,7 @@ class Investment(ABC):
         asset_value = asset_price * self.total_amount
         target_value = total_portfolio_value * self.target_ratio
         value_diff = asset_value-target_value
-        return value_diff/asset_price # eventually round result if only full stepps are possible
+        return value_diff/asset_price 
 
     def sell_amount(self, amount, date):
         remaining_amount = amount

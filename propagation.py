@@ -81,5 +81,11 @@ class Portfolio():
             stats.append(asset_value)
         return np.asarray(stats)
 
+    def find_asset_by_key(self, key):
+        for asset in self.assets:
+            if asset.key == key:
+                return asset
+        raise KeyError(f'"{key}" is not valid.')
+    
     # def handle_holding_cost(self):
     #     pass

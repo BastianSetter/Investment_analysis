@@ -12,9 +12,8 @@ class Depositer(ABC):
         self.triggers.append(trigger)
 
     def deposit(self, date, portfolio):
-        rebalance_today = False
-        for trigger in self.triggers:
-            trigger.check_trigger(date, portfolio)
+        rebalance_today = any(trigger.check_trigger(date, portfolio) for trigger in self.triggers)                
+
         if not rebalance_today: return 
 
         self.execute_deposit(date, portfolio)
@@ -24,21 +23,42 @@ class Depositer(ABC):
         ...
 
 class PureCash(Depositer):
-    def __init__(self, cash_deposit_value) -> None:
+    def __init__(self, deposit_value) -> None:
         super().__init__()
         
-        self.cash_deposit_value = cash_deposit_value
+        self.cash_deposit_value = deposit_value
         
     
     def execute_deposit(self, date, portfolio):
         portfolio.cash_position += self.cash_deposit_value
         
 
-class DistributedCashPlan(Depositer):
-    ...
+class DistributedCash(Depositer):
+    def __init__(self, deposit_value) -> None:
+        super().__init__()
+        
+        self.cash_deposit_value = deposit_value
+        
+    
+    def execute_deposit(self, date, portfolio):
+        portfolio.cash_position += self.cash_deposit_value
+        #TODO:redo
+        portfolio.rebalancer.buy_under_positions(date, self)
 
-class FixedShareSavingPlans(Depositer):
-    ...
+class FixedShare(Depositer):
+    def __init__(self, deposit_value, asset_key) -> None:
+        super().__init__()
+        
+        self.cash_deposit_value = deposit_value
+        self.asset_key = asset_key
+        #TODO: use asset directly
+        
+    
+    def execute_deposit(self, date, portfolio):
+        
+        asset = portfolio.find_asset_by_key(self.asset_key)
+        buy_order = asset.buy_per_value(self.cash_deposit_value, date)
+        portfolio.combined_order_history.append(buy_order)
 
-class DynamicShareSavingPlans(Depositer):
+class DynamicShare(Depositer):
     ...

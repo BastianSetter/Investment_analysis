@@ -8,7 +8,7 @@ from investmentclasses import Investment
 
 class Trigger(ABC):
     #TODO only weekdays bool
-    #TODO pydantic type checking
+    #TODO enforce types
     @abstractmethod
     def check_trigger():
         ...

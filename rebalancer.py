@@ -37,7 +37,7 @@ class Rebalancer():
         total_portfolio_value = portfolio.calculate_total_value(date)
         for asset in portfolio.assets:
             if (rebalance_amount := asset.rebalance_amount(total_portfolio_value, date)) - 0:
-                buy_order = asset.buy_amount(-rebalance_amount, date)
+                buy_order = asset.buy_per_piece(-rebalance_amount, date)
                 portfolio.combined_order_history.append(buy_order)
                 used_cash = buy_order.amount*buy_order.order_price-(buy_order.fees+buy_order.tax)
                 portfolio.cash_position -= used_cash

@@ -20,6 +20,9 @@ class Rebalancer():
         self.execute_rebalance(date, portfolio)
 
     def execute_rebalance(self, date, portfolio):
+        self.execute_rebalance(date, portfolio)
+
+    def execute_rebalance(self, date, portfolio):
         #TODO: buy and sell can be combined if enough accuracy in cash terms is acchieved (including fees, taxes)
         # and further preassignment takes place
         self.sell_over_positions(portfolio, date)

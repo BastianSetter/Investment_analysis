@@ -76,9 +76,22 @@ class Investment(ABC):
         sell_order = HistoryOrder(self.key_name, date, amount, sell_price, combined_fee, combined_tax)
         return sell_order
     
-    def buy_amount(self, amount, date):
+    def buy_per_piece(self, amount, date):
         buy_price = self.get_price_from_date(date)
         cash_estimate = buy_price*amount
+        fee_estimate = self.calculate_buy_fee(cash_estimate)
+        final_amount = (cash_estimate-fee_estimate)/buy_price
+        self.total_amount += final_amount
+
+        open_order = OngoiningOrder(date, final_amount, buy_price)
+        self.open_orders.append(open_order)
+
+        buy_order = HistoryOrder(self.key_name, date, final_amount, buy_price, fee_estimate, 0)
+        return buy_order
+    
+    def buy_per_value(self, value, date):
+        cash_estimate = value
+        buy_price = self.get_price_from_date(date)
         fee_estimate = self.calculate_buy_fee(cash_estimate)
         final_amount = (cash_estimate-fee_estimate)/buy_price
         self.total_amount += final_amount

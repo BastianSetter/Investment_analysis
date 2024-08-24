@@ -3,6 +3,14 @@ from datetime import date
 from abc import ABC, abstractmethod
 from triggers import Trigger
 
+def update_converged(old_changes, updated_changes)->bool:
+    maximum_allowed_change = 1
+    if any(np.abs(new - old)>maximum_allowed_change for new, old in zip(updated_changes, old_changes)):
+        return False
+    else: 
+        return True
+
+
 class Rebalancer():
     def __init__(self) -> None:
         self.triggers = []
@@ -20,31 +28,27 @@ class Rebalancer():
         self.execute_rebalance(date, portfolio)
 
     def execute_rebalance(self, date, portfolio):
-        self.execute_rebalance(date, portfolio)
-
-    def execute_rebalance(self, date, portfolio):
-        #TODO: buy and sell can be combined if enough accuracy in cash terms is acchieved (including fees, taxes)
-        # and further preassignment takes place
-        self.sell_over_positions(portfolio, date)
-        self.buy_under_positions(portfolio, date)
-
-    def sell_over_positions(self, portfolio, date:date):
-        total_portfolio_value = portfolio.calculate_total_value(date)
+        #TODO: include a minimum transaction value, to reduce unnecessary fees
+        
         for asset in portfolio.assets:
-            if (rebalance_amount := asset.rebalance_amount(total_portfolio_value, date)) > 0:
-                sell_order = asset.sell_amount(rebalance_amount, date)
-                portfolio.combined_order_history.append(sell_order)
-                recieved_cash = sell_order.amount*sell_order.order_price-(sell_order.fees+sell_order.tax)
-                portfolio.cash_position += recieved_cash
+            asset.update_cost_function_table()
+        
+        changes = [0]*len(portfolio.assets)
+        while True:
+            #BEWARY: wann sind costs in changes und total value drin: Oscilieren?
+            total_value = portfolio.calculate_total_value(date, changes = changes)
+            new_changes = [total_value*asset.target_ratio - asset.current_value(date) for asset in portfolio.assets]
+            if update_converged(changes, new_changes): break
+            changes = new_changes
 
-            
-    def buy_under_positions(self, portfolio, date:date):
-        total_portfolio_value = portfolio.calculate_total_value(date)
-        for asset in portfolio.assets:
-            if (rebalance_amount := asset.rebalance_amount(total_portfolio_value, date)) < 0:
-                buy_order = asset.buy_per_piece(-rebalance_amount, date)
+        for asset, change in zip(portfolio.assets, new_changes):
+            if change>0:
+                buy_order = asset.buy_per_value(change, date)
                 portfolio.combined_order_history.append(buy_order)
-                used_cash = buy_order.amount*buy_order.order_price-(buy_order.fees+buy_order.tax)
-                portfolio.cash_position -= used_cash
+                portfolio.cash_position -= change
+            elif change<0:
+                sell_order = asset.sell_per_value(change, date)
+                portfolio.combined_order_history.append(sell_order)
+                portfolio.cash_position += (change-sell_order.fees-sell_order.tax)
 
 

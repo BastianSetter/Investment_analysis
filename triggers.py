@@ -1,8 +1,9 @@
 from datetime import date
 from abc import ABC, abstractmethod
 from enum import Enum, auto
-from propagation import Portfolio
-from investmentclasses import Investment
+#typehinting
+import propagation
+import investmentclasses
 
 
 
@@ -10,7 +11,7 @@ class Trigger(ABC):
     #TODO only weekdays bool
     #TODO enforce types
     @abstractmethod
-    def check_trigger():
+    def check_trigger(self, date: date, portfolio:'propagation.Portfolio')->bool:
         ...
 
 class TimeUnit(Enum):
@@ -25,8 +26,7 @@ class TimeTrigger(Trigger):
         self.time_interval = time_interval
         self.reference_date = reference_date
 
-    def check_trigger(self, date: date) -> bool:
-        
+    def check_trigger(self, date, portfolio):
         match self.time_unit:
             case TimeUnit.DAYS:
                 delta_days = (date - self.reference_date).days
@@ -62,11 +62,11 @@ class DeviationTrigger(Trigger):
         self.deviation_threshold = deviation_threshold
         self.include_cash = include_cash
 
-    def check_trigger(self, date:date, portfolio:Portfolio):
+    def check_trigger(self, date, portfolio):
         #get_target_values
         total_portfolio_value = portfolio.calculate_total_value(date, self.include_cash)
 
-        asset:Investment
+        asset:'investmentclasses.Investment'
         for asset in portfolio.assets:
             asset_value = asset.get_price_from_date(date) * asset.total_amount
             actual_ratio = asset_value/total_portfolio_value

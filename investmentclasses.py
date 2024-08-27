@@ -44,7 +44,7 @@ class Investment(ABC):
         self.percent_sell_tax = 0.25
         #TODO: exempt after timeperiod
 
-        self.cost_function_table = pd.DataFrame(data = [0,np.inf,0,0], columns=['lower_bound', 'upper_bound', 'slope', 'starting_value'])
+        self.cost_function_table = pd.DataFrame(data = [[0,np.inf,0,0]], columns=['lower_bound', 'upper_bound', 'slope', 'starting_value'])
         self.key_name = key
 
     def get_price_from_date(self, date:date) -> float:
@@ -61,25 +61,24 @@ class Investment(ABC):
         roi = sell_price/buy_price - 1
         return roi
     
-    def rebalance_amount(self, total_portfolio_value, date):
+    def rebalance_amount(self, total_portfolio_value:float, date:date):
         asset_price = self.get_price_from_date(date)
         asset_value = asset_price * self.total_amount
         target_value = total_portfolio_value * self.target_ratio
         value_diff = asset_value-target_value
         return value_diff/asset_price 
 
-    def cost_function(self, value) -> float:
-        up_mask = self.cost_function_table['upper_bound']>=value
-        low_mask = self.cost_function_table['lower_bound']<value
+    def cost_function(self, value:float) -> float:
+        up_mask = self.cost_function_table['upper_bound']>value
+        low_mask = self.cost_function_table['lower_bound']<=value
         relevant_row = self.cost_function_table[(up_mask)&(low_mask)]
         assert len(relevant_row) == 1
-
         cost = relevant_row['starting_value']+relevant_row['slope']*(value-relevant_row['lower_bound'])
-        return cost
+        return cost.item()
 
-    def update_cost_function_table(self, date):
+    def update_cost_function_table(self, date:date):
         cur_price = self.get_price_from_date(date)
-        self.cost_function_table = tab = pd.DataFrame(data = np.zeros((4,len(self.open_orders)+1)), columns=['lower_bound', 'upper_bound', 'slope', 'starting_value'])
+        self.cost_function_table = tab = pd.DataFrame(data = np.zeros((len(self.open_orders)+1,4)), columns=['lower_bound', 'upper_bound', 'slope', 'starting_value'])
         #insert buy costs
         tab.loc[0,'upper_bound'] = np.inf
         tab.loc[0,'lower_bound'] = 0
@@ -87,26 +86,27 @@ class Investment(ABC):
         tab.loc[0,'starting_value'] = self.flat_buy_fee
 
         #insert sell costs
+        if len(self.open_orders)<1: return
         #first sell
         first_order = self.open_orders[0]
         tab.loc[1,'upper_bound'] = 0
         tab.loc[1,'lower_bound'] = -first_order.remaining_amount*cur_price
-        tax_slope = np.max(0, self.percent_sell_tax*(1-first_order.order_price/cur_price))
+        tax_slope = np.max([0, self.percent_sell_tax*(1-first_order.order_price/cur_price)])
         tab.loc[1,'slope'] = -(self.percent_sell_fee+tax_slope)
         max_fees = (tab.loc[1,'lower_bound']-tab.loc[1,'upper_bound'])*tab.loc[1,'slope']
         tab.loc[1,'starting_value'] = self.flat_sell_fee+max_fees
 
         #further sells
-        for counter, open_order in enumerate(self.open_orders[1:]):
+        for counter, open_order in enumerate(list(self.open_orders)[1:]):
             tab.loc[2+counter,'upper_bound'] = tab.loc[1+counter,'lower_bound']
             tab.loc[2+counter,'lower_bound'] = tab.loc[1+counter,'lower_bound']-open_order.remaining_amount*cur_price
-            tax_slope = np.max(0, self.percent_sell_tax*(1-first_order.order_price/cur_price))
+            tax_slope = np.max([0, self.percent_sell_tax*(1-first_order.order_price/cur_price)])
             tab.loc[2+counter,'slope'] = -(self.percent_sell_fee+tax_slope)
             max_fees = (tab.loc[2+counter,'lower_bound']-tab.loc[2+counter,'upper_bound'])*tab.loc[2+counter,'slope']
             tab.loc[2+counter,'starting_value'] = tab.loc[1+counter,'starting_value']+max_fees
         
 
-    def sell_amount(self, amount, date):
+    def sell_amount(self, amount:float, date:date):
         remaining_amount = amount
         combined_tax = 0
         sell_price = self.get_price_from_date(date)
@@ -129,42 +129,39 @@ class Investment(ABC):
         sell_order = HistoryOrder(self.key_name, date, amount, sell_price, combined_fee, combined_tax)
         return sell_order
     
-    def sell_per_value(self, value, date):
+    def sell_per_value(self, value:float, date:date):
         amount = value/self.get_price_from_date(date)
         sell_order = self.sell_amount(amount, date)
         return sell_order
 
-    def buy_per_value(self, value, date):
+    def buy_per_value(self, value:float, date:date):
         buy_price = self.get_price_from_date(date)
         fees = self.calculate_buy_fee(value)
-        taxes = self.calculate_sell_tax(value)
-        amount = (value-fees-taxes)/buy_price
+        amount = (value-fees)/buy_price
         self.total_amount += amount
 
         open_order = OngoiningOrder(date, amount, buy_price)
         self.open_orders.append(open_order)
 
-        buy_order = HistoryOrder(self.key_name, date, amount, buy_price, fees, taxes)
+        buy_order = HistoryOrder(self.key_name, date, amount, buy_price, fees, 0)
         return buy_order
 
-    @abstractmethod
-    def calculate_sell_tax(self, buy_price, sell_price, amount) -> float:
+    def calculate_sell_tax(self, buy_price:float, sell_price:float, amount:float) -> float:
         gains = (sell_price - buy_price) * amount
         return gains*self.capital_gains_tax
     
-    def calculate_sell_fee(self, sell_value) -> float:
+    def calculate_sell_fee(self, sell_value:float) -> float:
         return self.flat_sell_fee+self.percent_sell_fee*sell_value
     
-    def calculate_buy_fee(self, buy_value) -> float:
+    def calculate_buy_fee(self, buy_value:float) -> float:
         return self.flat_buy_fee+self.percent_buy_fee*buy_value
 
     # @abstractmethod
     # def calculate_hold_cost():
     #     ...
 
-
 class Share(Investment):
     def __init__(self, key: str, ratio:float) -> None:
         super().__init__(key, ratio)
 
-    #TODO: adjustable cost structure
+    #TODO: adjustable cost structure and whether subclasses for different assets are the right choice

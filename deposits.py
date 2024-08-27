@@ -1,25 +1,25 @@
 import numpy as np
 from datetime import date
 from abc import ABC, abstractmethod
-
-from triggers import Trigger
+#typehinting
+import triggers
+import propagation
 
 class Depositer(ABC):
     def __init__(self) -> None:
         self.triggers = []
 
-    def add_trigger(self, trigger:Trigger):
+    def add_trigger(self, trigger:'triggers.Trigger'):
         self.triggers.append(trigger)
 
-    def deposit(self, date, portfolio):
-        rebalance_today = any(trigger.check_trigger(date, portfolio) for trigger in self.triggers)                
-
+    def deposit(self, date:date, portfolio:'propagation.Portfolio'):
+        rebalance_today = any(trigger.check_trigger(date, portfolio) for trigger in self.triggers)
         if not rebalance_today: return 
 
         self.execute_deposit(date, portfolio)
     
     @abstractmethod
-    def execute_deposit(self, date, portfolio):
+    def execute_deposit(self, date:date, portfolio:'propagation.Portfolio'):
         ...
 
 class PureCash(Depositer):
@@ -31,7 +31,6 @@ class PureCash(Depositer):
     
     def execute_deposit(self, date, portfolio):
         portfolio.cash_position += self.cash_deposit_value
-        
 
 class DistributedCash(Depositer):
     def __init__(self, deposit_value) -> None:

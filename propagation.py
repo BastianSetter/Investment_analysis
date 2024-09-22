@@ -1,12 +1,21 @@
 import numpy as np
-from datetime import datetime, timedelta, date
+from datetime import timedelta, date
+from deposits import Deposit
 from icecream import ic
+from dataclasses import dataclass
 #typehinting
 import deposits
 import investmentclasses
 import rebalancer
 
 # DATE_FORMAT = "%d.%m.%Y"
+
+@dataclass
+class Simulation_trace:
+    stats: list
+    orders: list
+    deposits: list
+
 
 def time_range(start_date:date, end_date:date):
     current_date = start_date
@@ -23,9 +32,11 @@ class Portfolio():
         self.assets = assets
         self.rebalancer = rebalancer
         self.depositers = []
+        self.deposits = []
         self.combined_order_history = []
         self.portfolio_history = []
-        self.cash_position = initial_cash
+        self.initial_cash = initial_cash# TODO: part of simulation restructure
+        self.cash_position = 0
     
     def add_depositer(self, depositer:'deposits.Depositer'):
         self.depositers.append(depositer)
@@ -33,9 +44,11 @@ class Portfolio():
 
     def simulate_timeinterval(self, start_date:date, end_date: date):
         self.assert_all_assets_valid_in_timeinterval(start_date, end_date)
-        for date in time_range(start_date, end_date):
-            #print(date)
+        #clear previous simulations: #TODO: this should not be necesarry ==> restructure simulation responsibility. Probably into tester class.
+        
+        self.init_simulation(start_date)
 
+        for date in time_range(start_date, end_date):
             #deposits
             for depositer in self.depositers:
                 depositer.deposit(date, self)
@@ -47,10 +60,25 @@ class Portfolio():
             self.rebalancer.rebalance(date, self)
 
             #performance tracking for later visualisation
+            if date is end_date:
+                break
             daily_stats = self.get_daily_stats(date)
             self.portfolio_history.append(daily_stats)
-            
 
+        # self.sell_all(date)
+        # daily_stats = self.get_daily_stats(date)
+        # self.portfolio_history.append(daily_stats)
+        simulation_trace = Simulation_trace(np.array(self.portfolio_history), self.combined_order_history, self.deposits)
+        return simulation_trace
+            
+    def init_simulation(self, date):
+        self.portfolio_history = []
+        self.combined_order_history = []
+        self.deposits = []
+
+        self.cash_position = self.initial_cash
+        deposit = Deposit(date, self.initial_cash)
+        self.deposits.append(deposit)
 
     def assert_all_assets_valid_in_timeinterval(self, start_date: date, end_date: date):
         for asset in self.assets:
@@ -87,6 +115,22 @@ class Portfolio():
             if asset.key == key:
                 return asset
         raise KeyError(f'"{key}" is not valid.')
+    
+    def get_first_common_date(self)-> date:
+        earliest_date = date(0,0,0)
+        for asset in self.assets:
+            date = asset.dates[0] #Check order of dates in investment and place note
+            if date > earliest_date:
+                earliest_date = date
+        return earliest_date
+    
+    def get_last_common_date(self) -> date:
+        latest_date = date(0,0,0)
+        for asset in self.assets:
+            date = asset.dates[-1] #Check order of dates in investment and place note
+            if date < latest_date:
+                latest_date = date
+        return latest_date
     
     # def handle_holding_cost(self):
     #     pass

@@ -30,7 +30,7 @@ def extrapolate_missing_dates(data):
 
     return (np.array(full_dates), interpolated_prices)
 
-
+#TODO: change to relative paths 
 def load_msci_world():
     df = pd.read_excel(r'C:\Users\basti\PythonScripts\Investment_analysis\data\MSCI_WORLD.xlsx', sheet_name='IE00BJ0KDQ92', skiprows=13)
     dates = df['Date'].values

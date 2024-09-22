@@ -27,6 +27,7 @@ class Rebalancer():
 
     def execute_rebalance(self, date:date, portfolio:'propagation.Portfolio'):
         #TODO: include a minimum transaction value, to reduce unnecessary fees
+        #TODO: option to only buy with best rebalance
         
         for asset in portfolio.assets:
             asset.update_cost_function_table(date)
@@ -34,6 +35,7 @@ class Rebalancer():
         changes = [0]*len(portfolio.assets)
         while True:
             #BEWARY: wann sind costs in changes und total value drin: Oscilieren?
+            #Woher kommen die 2€ übernach ausführung in test
             total_value = portfolio.calculate_total_value(date, changes = changes)
             new_changes = [total_value*asset.target_ratio - asset.get_current_value(date) for asset in portfolio.assets]
 

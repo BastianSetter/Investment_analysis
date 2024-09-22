@@ -113,7 +113,7 @@ class Investment(ABC):
         combined_fee = self.calculate_sell_fee(sell_price * amount)
 
         while remaining_amount > 0:
-            first_order = self.open_orders[0]
+            first_order:OngoiningOrder = self.open_orders[0]
             if remaining_amount > first_order.remaining_amount:
                 sell_amount = first_order.remaining_amount
                 self.open_orders.popleft()
@@ -164,4 +164,5 @@ class Share(Investment):
     def __init__(self, key: str, ratio:float) -> None:
         super().__init__(key, ratio)
 
-    #TODO: adjustable cost structure and whether subclasses for different assets are the right choice
+    #TODO:  adjustable cost structure and whether subclasses for different assets are the right choice
+    #       Options object for cost settings

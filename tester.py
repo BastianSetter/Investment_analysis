@@ -63,6 +63,8 @@ class Tester():
             taxes += order.tax
         return (fees, taxes)
     
+    #TODO: variable variation based on dict generation
+    
 
 
 

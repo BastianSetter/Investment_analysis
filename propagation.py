@@ -24,6 +24,8 @@ def time_range(start_date:date, end_date:date):
         current_date += timedelta(days=1)
 
 
+ #TODO: allow portfolio construction based on dict
+
 class Portfolio():
     def __init__(self, assets:list['investmentclasses.Investment'], rebalancer:'rebalancer.Rebalancer', initial_cash:float = 0) -> None:
         total_ratio = sum(asset.target_ratio for asset in assets)

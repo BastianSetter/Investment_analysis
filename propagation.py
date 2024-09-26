@@ -27,13 +27,15 @@ def time_range(start_date:date, end_date:date):
         current_date += timedelta(days = 1)
 
 
-#TODO: allow portfolio construction based on dict
+
 #TODO: reference_dates for triggers have to be set as portfolio attribute
+
 class Portfolio():
     def __init__(self, assets:list['investmentclasses.Investment'], rebalancer:'rebalancer.Rebalancer', initial_cash:float = 0) -> None:
         total_ratio = sum(asset.target_ratio for asset in assets)
-        assert np.isclose(total_ratio, 1)
-        #TODO: renormalise
+        for asset in assets:
+            asset.target_ratio = asset.target_ratio/total_ratio
+
         self.assets = assets
         self.rebalancer = rebalancer
         self.depositers = []

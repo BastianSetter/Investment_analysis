@@ -23,25 +23,37 @@ class OngoiningOrder:
     remaining_amount: float
     order_price: float
 
-def get_hold_time(buy_date:date, sell_date:date):
-    delta = sell_date - buy_date
-    return delta.days
+# def get_hold_time(buy_date:date, sell_date:date):
+#     delta = sell_date - buy_date
+#     return delta.days
+
+#Default cost settings
+FLAT_HOLD = 0
+PERCENT_HOLD = 0
+FLAT_BUY = 1
+PERCENT_BUY = 0
+FLAT_SELL = 1
+PERCENT_SELL_FEE = 0
+PERCENT_BUY_TAX = 0.25
 
 class Investment(ABC):
-    def __init__(self, key:str, ratio:float) -> None:
+    def __init__(self, key:str, ratio:float, 
+                flat_hold = FLAT_HOLD, percent_hold = PERCENT_HOLD, flat_buy = FLAT_BUY, percent_buy = PERCENT_BUY,
+                flat_sell = FLAT_SELL, percent_sell_fee = PERCENT_SELL_FEE, percent_sell_tax = PERCENT_BUY_TAX
+                ) -> None:
         self.dates, self.price = load_data(key)
         self.total_amount = 0
         self.target_ratio = ratio
         self.open_orders = deque([])
 
-        self.flat_hold_fee_per_year = 0
-        self.precent_hold_fee_per_year = 0
-        self.flat_buy_fee = 1
-        self.percent_buy_fee = 0
-        self.flat_sell_fee = 1
-        self.percent_sell_fee = 0
+        self.flat_hold_fee_per_year = flat_hold
+        self.precent_hold_fee_per_year = percent_hold
+        self.flat_buy_fee = flat_buy
+        self.percent_buy_fee = percent_buy
+        self.flat_sell_fee = flat_sell
+        self.percent_sell_fee = percent_sell_fee
 
-        self.percent_sell_tax = 0.25
+        self.percent_sell_tax = percent_sell_tax
         #TODO: exempt after timeperiod
 
         self.cost_function_table = pd.DataFrame(data = [[0,np.inf,0,0]], columns=['lower_bound', 'upper_bound', 'slope', 'starting_value'])
@@ -161,8 +173,16 @@ class Investment(ABC):
     #     ...
 
 class Share(Investment):
-    def __init__(self, key: str, ratio:float) -> None:
-        super().__init__(key, ratio)
+    def __init__(self, key: str, ratio:float, **cost_settings) -> None:
+        super().__init__(key, ratio, **cost_settings)
 
     #TODO:  adjustable cost structure and whether subclasses for different assets are the right choice
     #       Options object for cost settings
+
+class Crypto(Investment):
+    def __init__(self, key: str, ratio:float, percent_sell_tax = 0.42, **cost_settings) -> None:
+        super().__init__(key, ratio, percent_sell_tax=percent_sell_tax, **cost_settings)
+
+class Commodity(Investment):
+    def __init__(self, key: str, ratio:float, percent_hold = 2, **cost_settings) -> None:
+        super().__init__(key, ratio, percent_hold=percent_hold, **cost_settings)

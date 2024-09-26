@@ -1,6 +1,9 @@
 import numpy as np
 from datetime import timedelta, date
 from deposits import Deposit
+from investmentclasses import Commodity, Crypto, Share
+from rebalancer import Rebalancer
+from triggers import TimeTrigger, DeviationTrigger, DeviationType
 from icecream import ic
 from dataclasses import dataclass
 #typehinting
@@ -21,18 +24,18 @@ def time_range(start_date:date, end_date:date):
     current_date = start_date
     while current_date <= end_date:
         yield current_date
-        current_date += timedelta(days=1)
+        current_date += timedelta(days = 1)
 
 
- #TODO: allow portfolio construction based on dict
-
+#TODO: allow portfolio construction based on dict
+#TODO: reference_dates for triggers have to be set as portfolio attribute
 class Portfolio():
     def __init__(self, assets:list['investmentclasses.Investment'], rebalancer:'rebalancer.Rebalancer', initial_cash:float = 0) -> None:
         total_ratio = sum(asset.target_ratio for asset in assets)
         assert np.isclose(total_ratio, 1)
         #TODO: renormalise
         self.assets = assets
-        self.rebalancer = rebalancer
+        self.rebalancers = rebalancer
         self.depositers = []
         self.deposits = []
         self.combined_order_history = []
@@ -42,7 +45,6 @@ class Portfolio():
     
     def add_depositer(self, depositer:'deposits.Depositer'):
         self.depositers.append(depositer)
-
 
     def simulate_timeinterval(self, start_date:date, end_date: date):
         self.assert_all_assets_valid_in_timeinterval(start_date, end_date)
@@ -74,6 +76,7 @@ class Portfolio():
         return simulation_trace
             
     def init_simulation(self, date):
+        #TODO reset not working
         self.portfolio_history = []
         self.combined_order_history = []
         self.deposits = []
@@ -89,7 +92,6 @@ class Portfolio():
             if end_date not in asset.dates:
                 raise ValueError(f'End date "{start_date}" not in asset "{asset.key_name}"!')
 
-
     def calculate_total_value(self, date:date, include_cash: bool = True, changes = None):
         total_value = 0
         if changes is None:
@@ -104,7 +106,6 @@ class Portfolio():
         
         return total_value
 
-        
     def get_daily_stats(self, date: date):
         stats = [date, self.cash_position]
         for asset in self.assets:
@@ -136,3 +137,33 @@ class Portfolio():
     
     # def handle_holding_cost(self):
     #     pass
+
+def build_portfolio(blueprint: dict):
+    assets = []
+    for asset_bp in blueprint['asset']:
+        class_type = asset_bp.pop('class')
+        match class_type:
+            case 'share':
+                asset = Share(**asset_bp)
+            case 'crypto':
+                asset = Crypto(**asset_bp)
+            case 'commodity':
+                asset = Commodity(**asset_bp)
+            case _:
+                print(f'{class_type} is not an ``Investmentclass`` child.')
+        assets.append(asset)
+
+    
+    rebalancer = Rebalancer()
+    for rebalancer_bp in blueprint['rebalancer']:
+        triggertype = rebalancer_bp.pop('class')
+        match triggertype:
+            case 'time':
+                #TODO convert timeunit, refernce date inputs
+                trigger = TimeTrigger(**rebalancer_bp)
+            case 'deviation':
+                #TODO convert deviation type
+                trigger = DeviationTrigger(**rebalancer_bp)
+            case _:
+                print(f'{triggertype} is not an ``Trigger`` child.')
+        rebalancer.add_trigger(trigger)

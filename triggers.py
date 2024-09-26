@@ -15,10 +15,10 @@ class Trigger(ABC):
         ...
 
 class TimeUnit(Enum):
-    DAYS = auto()
-    WEEKS = auto()
-    MONTHS = auto()
-    YEARS = auto()
+    DAYS = 'd'
+    WEEKS = 'w'
+    MONTHS = 'm'
+    YEARS = 'y'
 
 class TimeTrigger(Trigger):
     def __init__(self, time_unit: TimeUnit = TimeUnit.MONTHS, time_interval: int = 6, reference_date: date = date(2024,1,7)):
@@ -53,8 +53,8 @@ class TimeTrigger(Trigger):
                 return delta_years % self.time_interval == 0
             
 class DeviationType(Enum):
-    ABSOLUTE = auto()
-    RELATIVE = auto()
+    ABSOLUTE = 'a'
+    RELATIVE = 'r'
 
 class DeviationTrigger(Trigger):
     def __init__(self, deviation_type: DeviationType, deviation_threshold: float, include_cash:bool = True):

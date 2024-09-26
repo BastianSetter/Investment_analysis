@@ -35,7 +35,7 @@ class Portfolio():
         assert np.isclose(total_ratio, 1)
         #TODO: renormalise
         self.assets = assets
-        self.rebalancers = rebalancer
+        self.rebalancer = rebalancer
         self.depositers = []
         self.deposits = []
         self.combined_order_history = []
@@ -138,32 +138,24 @@ class Portfolio():
     # def handle_holding_cost(self):
     #     pass
 
-def build_portfolio(blueprint: dict):
+def build_single_portfolio(blueprint: dict) -> Portfolio:
     assets = []
     for asset_bp in blueprint['asset']:
-        class_type = asset_bp.pop('class')
-        match class_type:
-            case 'share':
-                asset = Share(**asset_bp)
-            case 'crypto':
-                asset = Crypto(**asset_bp)
-            case 'commodity':
-                asset = Commodity(**asset_bp)
-            case _:
-                print(f'{class_type} is not an ``Investmentclass`` child.')
+        asset_class = asset_bp.pop('class')
+        asset = asset_class(**asset_bp)
         assets.append(asset)
 
-    
     rebalancer = Rebalancer()
     for rebalancer_bp in blueprint['rebalancer']:
-        triggertype = rebalancer_bp.pop('class')
-        match triggertype:
-            case 'time':
-                #TODO convert timeunit, refernce date inputs
-                trigger = TimeTrigger(**rebalancer_bp)
-            case 'deviation':
-                #TODO convert deviation type
-                trigger = DeviationTrigger(**rebalancer_bp)
-            case _:
-                print(f'{triggertype} is not an ``Trigger`` child.')
+        trigger_class = rebalancer_bp.pop('class')
+        trigger = trigger_class(**rebalancer_bp)
         rebalancer.add_trigger(trigger)
+
+    portfolio = Portfolio(assets=assets, rebalancer = rebalancer, initial_cash=blueprint['initial_cash'])
+
+    for depositer in blueprint['deposit']:
+        depositer_class = asset_bp.pop('class')
+        depositer = depositer_class(**asset_bp)
+        portfolio.add_depositer(depositer)
+
+    return portfolio

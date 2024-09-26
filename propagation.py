@@ -19,6 +19,40 @@ class Simulation_trace:
     orders: list
     deposits: list
 
+    @property
+    def internal_rate_of_return(self):
+        end_date:date = self.stats[-1][0]
+        final_portfolio_value = np.sum(self.stats[-1][1:])
+
+        best_irr_approx = 0
+        best_difference = np.inf
+        for irr in np.linspace(0,10,10000):
+            result = 0
+            for deposit in self.deposits:
+                invest_duration = (end_date-deposit.date).days/365.2425
+                result += deposit.value*(1+irr)**invest_duration
+
+            approx_diff = np.abs(result-final_portfolio_value)
+            if approx_diff < best_difference:
+                best_difference = approx_diff
+                best_irr_approx = irr
+            else: break
+
+        return best_irr_approx
+    
+    @property
+    def calculate_lost_costs(self):
+        fees = 0
+        taxes = 0
+        for order in self.orders:
+            fees += order.fees
+            taxes += order.tax
+        return fees + taxes
+    
+    # def calculate_lost_costs(self, sim_trace: 'propagation.Simulation_trace'):
+    #     ...
+    #     # run an additional simulation with no taxes and/or fees
+
 
 def time_range(start_date:date, end_date:date):
     current_date = start_date

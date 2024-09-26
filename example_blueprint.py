@@ -27,7 +27,7 @@ portfolio_blueprint = {
         {'class': PureCash, 
         'amount': 500, 
         'timeunit': TimeUnit.MONTHS, 
-        'interval': 2}
+        'interval': [1,6,5,'lin','deposit_interval']}
     ]
 }
 

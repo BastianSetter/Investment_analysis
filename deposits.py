@@ -2,9 +2,11 @@ import numpy as np
 from dataclasses import dataclass
 from datetime import date
 from abc import ABC, abstractmethod
+from typing import List
 #typehinting
 import triggers
 import propagation
+import investmentclasses
 
 @dataclass
 class Deposit:
@@ -12,8 +14,12 @@ class Deposit:
     value: float
 
 class Depositer(ABC):
-    def __init__(self) -> None:
+    def __init__(self, triggers:List['triggers.Trigger']) -> None:
         self.triggers = []
+        for trigger in triggers:
+            trigger_class = trigger.pop('class')
+            trigger = trigger_class(**trigger)
+            self.add_trigger(trigger)
 
     def add_trigger(self, trigger:'triggers.Trigger'):
         self.triggers.append(trigger)
@@ -28,9 +34,13 @@ class Depositer(ABC):
     def execute_deposit(self, date:date, portfolio:'propagation.Portfolio'):
         ...
 
+class test(Depositer):
+    def __init__(self, deposit_value:float, triggers: List['triggers.Trigger']) -> None:
+        super().__init__(triggers)
+
 class PureCash(Depositer):
-    def __init__(self, deposit_value) -> None:
-        super().__init__()
+    def __init__(self, deposit_value:float, triggers: List['triggers.Trigger']) -> None:
+        super().__init__(triggers)
         self.cash_deposit_value = deposit_value
 
     
@@ -42,8 +52,8 @@ class PureCash(Depositer):
 
 
 class DistributedCash(Depositer):
-    def __init__(self, deposit_value) -> None:
-        super().__init__()
+    def __init__(self, deposit_value:float, triggers: List['triggers.Trigger']) -> None:
+        super().__init__(triggers)
         self.cash_deposit_value = deposit_value
         
     
@@ -56,8 +66,8 @@ class DistributedCash(Depositer):
         portfolio.deposits.append(deposit)
 
 class FixedShare(Depositer):
-    def __init__(self, deposit_value, asset) -> None:
-        super().__init__()
+    def __init__(self, deposit_value:float, asset:'investmentclasses.Investment', triggers: List['triggers.Trigger']) -> None:
+        super().__init__(triggers)
         self.cash_deposit_value = deposit_value
         self.asset = asset        
     

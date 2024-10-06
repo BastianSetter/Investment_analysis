@@ -1,9 +1,7 @@
 import numpy as np
 from datetime import timedelta, date
 from deposits import Deposit
-from investmentclasses import Commodity, Crypto, Share
 from rebalancer import Rebalancer
-from triggers import TimeTrigger, DeviationTrigger, DeviationType
 from icecream import ic
 from dataclasses import dataclass
 #typehinting
@@ -41,7 +39,7 @@ class Simulation_trace:
         return best_irr_approx
     
     @property
-    def calculate_lost_costs(self):
+    def total_costs_paid(self):
         fees = 0
         taxes = 0
         for order in self.orders:
@@ -79,6 +77,20 @@ class Portfolio():
         self.initial_cash = initial_cash# TODO: part of simulation restructure
         self.cash_position = 0
     
+    def __str__(self) -> str:
+    # Initialize the string with the cash position
+        result = f'Cash: {self.cash_position}\nAssets\n'
+        
+        # Append each asset's details to the result string
+        for asset in self.assets:
+            result += f'Key: {asset.key_name}; Ratio: {asset.target_ratio}; Amount: {asset.total_amount}\n'
+        
+        # Return the constructed string
+        return result
+    
+    def __repr__(self) -> str:
+        return self.__str__()
+
     def add_depositer(self, depositer:'deposits.Depositer'):
         self.depositers.append(depositer)
 
@@ -134,7 +146,6 @@ class Portfolio():
             changes = [0]*len(self.assets)
         if include_cash:
             total_value += self.cash_position
-            
         for asset, change in zip(self.assets, changes):
             asset_value = asset.get_current_value(date)
             cost = asset.cost_function(change)
@@ -156,19 +167,19 @@ class Portfolio():
         raise KeyError(f'"{key}" is not valid.')
     
     def get_first_common_date(self)-> date:
-        earliest_date = date(0,0,0)
+        earliest_date = date(1000,1,1)
         for asset in self.assets:
-            date = asset.dates[0] #Check order of dates in investment and place note
-            if date > earliest_date:
-                earliest_date = date
+            first_date = asset.dates[0] 
+            if first_date > earliest_date:
+                earliest_date = first_date
         return earliest_date
     
     def get_last_common_date(self) -> date:
-        latest_date = date(0,0,0)
+        latest_date = date(3000,1,1)
         for asset in self.assets:
-            date = asset.dates[-1] #Check order of dates in investment and place note
-            if date < latest_date:
-                latest_date = date
+            last_date = asset.dates[-1]
+            if last_date < latest_date:
+                latest_date = last_date
         return latest_date
     
     # def handle_holding_cost(self):
@@ -180,7 +191,7 @@ def build_single_portfolio(blueprint: dict) -> Portfolio:
         asset_class = asset_bp.pop('class')
         asset = asset_class(**asset_bp)
         assets.append(asset)
-
+ 
     rebalancer = Rebalancer()
     for rebalancer_bp in blueprint['rebalancer']:
         trigger_class = rebalancer_bp.pop('class')
@@ -189,9 +200,9 @@ def build_single_portfolio(blueprint: dict) -> Portfolio:
 
     portfolio = Portfolio(assets=assets, rebalancer = rebalancer, initial_cash=blueprint['initial_cash'])
 
-    for depositer in blueprint['deposit']:
-        depositer_class = asset_bp.pop('class')
-        depositer = depositer_class(**asset_bp)
+    for deposit_bp in blueprint['deposit']:
+        depositer_class = deposit_bp.pop('class')
+        depositer = depositer_class(**deposit_bp)
         portfolio.add_depositer(depositer)
 
     return portfolio

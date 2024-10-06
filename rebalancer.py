@@ -46,10 +46,9 @@ class Rebalancer():
             if change>0:
                 buy_order = asset.buy_per_value(change, date)
                 portfolio.combined_order_history.append(buy_order)
-                portfolio.cash_position -= change
+                portfolio.cash_position -= (change + buy_order.fees + buy_order.tax)
             elif change<0:
                 sell_order = asset.sell_per_value(change, date)
                 portfolio.combined_order_history.append(sell_order)
-                portfolio.cash_position += (change-sell_order.fees-sell_order.tax)
-
+                portfolio.cash_position -= (change + sell_order.fees + sell_order.tax)
 

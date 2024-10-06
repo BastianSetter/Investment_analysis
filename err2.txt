@@ -1,0 +1,190 @@
+ic| step: 4.75
+{'initial_cash': 5000, 'asset': [{'class': <class 'investmentclasses.Share'>, 'key': 'msciworld', 'ratio': 7}, {'class': <class 'investmentclasses.Share'>, 'key': 'msciem', 'ratio': 3}], 'rebalancer': [{'class': <class 'triggers.DeviationTrigger'>, 'deviation_type': <DeviationType.RELATIVE: 'r'>, 'deviation_threshold': 5}, {'class': <class 'triggers.TimeTrigger'>, 'time_unit': <TimeUnit.MONTHS: 'm'>, 'time_interval': 6}], 'deposit': [{'class': <class 'deposits.PureCash'>, 'deposit_value': 500, 'triggers': [{'class': <class 'triggers.TimeTrigger'>, 'time_unit': <TimeUnit.MONTHS: 'm'>, 'time_interval': [4.75, 4.75, 1, 'lin', 'deposit_interval']}]}]}
+ic| new_changes: [3498.6, 1499.3999999999999]
+pre buy Cash: 5000
+Assets
+Key: msciworld; Ratio: 0.7; Amount: 0
+Key: msciem; Ratio: 0.3; Amount: 0
+
+post buy Cash: 1501.4
+Assets
+Key: msciworld; Ratio: 0.7; Amount: 65.43171537503133
+Key: msciem; Ratio: 0.3; Amount: 0
+
+pre buy Cash: 1501.4
+Assets
+Key: msciworld; Ratio: 0.7; Amount: 65.43171537503133
+Key: msciem; Ratio: 0.3; Amount: 0
+
+post buy Cash: 2.0000000000002274
+Assets
+Key: msciworld; Ratio: 0.7; Amount: 65.43171537503133
+Key: msciem; Ratio: 0.3; Amount: 33.50663580764543
+
+ic| new_changes: [427.9726118579656, 72.02738814203417]
+pre buy Cash: 502.0000000000002
+Assets
+Key: msciworld; Ratio: 0.7; Amount: 65.43171537503133
+Key: msciem; Ratio: 0.3; Amount: 33.50663580764543
+
+post buy Cash: 74.02738814203462
+Assets
+Key: msciworld; Ratio: 0.7; Amount: 72.45928450075826
+Key: msciem; Ratio: 0.3; Amount: 33.50663580764543
+
+pre buy Cash: 74.02738814203462
+Assets
+Key: msciworld; Ratio: 0.7; Amount: 72.45928450075826
+Key: msciem; Ratio: 0.3; Amount: 33.50663580764543
+
+post buy Cash: 2.0000000000004547
+Assets
+Key: msciworld; Ratio: 0.7; Amount: 72.45928450075826
+Key: msciem; Ratio: 0.3; Amount: 34.81776704635345
+
+ic| new_changes: [-134.4266029087812, 130.56513896248362]
+pre sell Cash: 2.0000000000004547
+Assets
+Key: msciworld; Ratio: 0.7; Amount: 72.45928450075826
+Key: msciem; Ratio: 0.3; Amount: 34.81776704635345
+
+post buy Cash: -133.42660290878075
+Assets
+Key: msciworld; Ratio: 0.7; Amount: 74.68501457029494
+Key: msciem; Ratio: 0.3; Amount: 34.81776704635345
+
+pre buy Cash: -133.42660290878075
+Assets
+Key: msciworld; Ratio: 0.7; Amount: 74.68501457029494
+Key: msciem; Ratio: 0.3; Amount: 34.81776704635345
+
+post buy Cash: -263.99174187126437
+Assets
+Key: msciworld; Ratio: 0.7; Amount: 74.68501457029494
+Key: msciem; Ratio: 0.3; Amount: 37.491243582743294
+
+ic| new_changes: [-243.55210626812777, -24.337535643010597]
+pre sell Cash: -263.99174187126437
+Assets
+Key: msciworld; Ratio: 0.7; Amount: 74.68501457029494
+Key: msciem; Ratio: 0.3; Amount: 37.491243582743294
+
+post buy Cash: -508.54384813939214
+Assets
+Key: msciworld; Ratio: 0.7; Amount: 79.10155093805164
+Key: msciem; Ratio: 0.3; Amount: 37.491243582743294
+
+pre sell Cash: -508.54384813939214
+Assets
+Key: msciworld; Ratio: 0.7; Amount: 79.10155093805164
+Key: msciem; Ratio: 0.3; Amount: 37.491243582743294
+
+post buy Cash: -533.8813837824027
+Assets
+Key: msciworld; Ratio: 0.7; Amount: 79.10155093805164
+Key: msciem; Ratio: 0.3; Amount: 38.0327383317373
+
+ic| new_changes: [-245.90436895077983, 199.9561690680032]
+pre sell Cash: -33.881383782402736
+Assets
+Key: msciworld; Ratio: 0.7; Amount: 79.10155093805164
+Key: msciem; Ratio: 0.3; Amount: 38.0327383317373
+
+post buy Cash: -280.78575273318256
+Assets
+Key: msciworld; Ratio: 0.7; Amount: 82.94851121474595
+Key: msciem; Ratio: 0.3; Amount: 38.0327383317373
+
+pre buy Cash: -280.78575273318256
+Assets
+Key: msciworld; Ratio: 0.7; Amount: 82.94851121474595
+Key: msciem; Ratio: 0.3; Amount: 38.0327383317373
+
+post buy Cash: -480.74192180118575
+Assets
+Key: msciworld; Ratio: 0.7; Amount: 82.94851121474595
+Key: msciem; Ratio: 0.3; Amount: 42.097340292328596
+
+ic| new_changes: [-535.039552104281, 21.798496072931357]
+pre sell Cash: -480.74192180118575
+Assets
+Key: msciworld; Ratio: 0.7; Amount: 82.94851121474595
+Key: msciem; Ratio: 0.3; Amount: 42.097340292328596
+
+post buy Cash: -1016.7814739054668
+Assets
+Key: msciworld; Ratio: 0.7; Amount: 90.67541708638888
+Key: msciem; Ratio: 0.3; Amount: 42.097340292328596
+
+pre buy Cash: -1016.7814739054668
+Assets
+Key: msciworld; Ratio: 0.7; Amount: 90.67541708638888
+Key: msciem; Ratio: 0.3; Amount: 42.097340292328596
+
+post buy Cash: -1038.5799699783981
+Assets
+Key: msciworld; Ratio: 0.7; Amount: 90.67541708638888
+Key: msciem; Ratio: 0.3; Amount: 42.493437992185406
+
+ic| new_changes: [-1082.6674213279039, -11.034037150142012]
+pre sell Cash: -1038.5799699783981
+Assets
+Key: msciworld; Ratio: 0.7; Amount: 90.67541708638888
+Key: msciem; Ratio: 0.3; Amount: 42.493437992185406
+
+post buy Cash: -2122.2473913063022
+Assets
+Key: msciworld; Ratio: 0.7; Amount: 106.97625498291833
+Key: msciem; Ratio: 0.3; Amount: 42.493437992185406
+
+pre sell Cash: -2122.2473913063022
+Assets
+Key: msciworld; Ratio: 0.7; Amount: 106.97625498291833
+Key: msciem; Ratio: 0.3; Amount: 42.493437992185406
+
+post buy Cash: -2134.2814284564442
+Assets
+Key: msciworld; Ratio: 0.7; Amount: 106.97625498291833
+Key: msciem; Ratio: 0.3; Amount: 42.71376401029908
+
+ic| new_changes: [-1986.0678859497039, 178.91943594543955]
+pre sell Cash: -1634.2814284564442
+Assets
+Key: msciworld; Ratio: 0.7; Amount: 106.97625498291833
+Key: msciem; Ratio: 0.3; Amount: 42.71376401029908
+
+post buy Cash: -3621.349314406148
+Assets
+Key: msciworld; Ratio: 0.7; Amount: 131.34461800205904
+Key: msciem; Ratio: 0.3; Amount: 42.71376401029908
+
+pre buy Cash: -3621.349314406148
+Assets
+Key: msciworld; Ratio: 0.7; Amount: 131.34461800205904
+Key: msciem; Ratio: 0.3; Amount: 42.71376401029908
+
+post buy Cash: -3800.2687503515876
+Assets
+Key: msciworld; Ratio: 0.7; Amount: 131.34461800205904
+Key: msciem; Ratio: 0.3; Amount: 45.52164978721159
+
+ic| new_changes: [-4534.543162139267, 259.9463470226442]
+pre sell Cash: -3800.2687503515876
+Assets
+Key: msciworld; Ratio: 0.7; Amount: 131.34461800205904
+Key: msciem; Ratio: 0.3; Amount: 45.52164978721159
+
+post buy Cash: -8335.811912490855
+Assets
+Key: msciworld; Ratio: 0.7; Amount: 180.8304824128371
+Key: msciem; Ratio: 0.3; Amount: 45.52164978721159
+
+pre buy Cash: -8335.811912490855
+Assets
+Key: msciworld; Ratio: 0.7; Amount: 180.8304824128371
+Key: msciem; Ratio: 0.3; Amount: 45.52164978721159
+
+post buy Cash: -8595.758259513499
+Assets
+Key: msciworld; Ratio: 0.7; Amount: 180.8304824128371
+Key: msciem; Ratio: 0.3; Amount: 49.51103715876435

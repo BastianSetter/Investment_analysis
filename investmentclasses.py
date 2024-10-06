@@ -34,12 +34,12 @@ FLAT_BUY = 1
 PERCENT_BUY = 0
 FLAT_SELL = 1
 PERCENT_SELL_FEE = 0
-PERCENT_BUY_TAX = 0.25
+PERCENT_SELL_TAX = 0.25
 
 class Investment(ABC):
     def __init__(self, key:str, ratio:float, 
                 flat_hold = FLAT_HOLD, percent_hold = PERCENT_HOLD, flat_buy = FLAT_BUY, percent_buy = PERCENT_BUY,
-                flat_sell = FLAT_SELL, percent_sell_fee = PERCENT_SELL_FEE, percent_sell_tax = PERCENT_BUY_TAX
+                flat_sell = FLAT_SELL, percent_sell_fee = PERCENT_SELL_FEE, percent_sell_tax = PERCENT_SELL_TAX
                 ) -> None:
         self.dates, self.price = load_data(key)
         self.total_amount = 0
@@ -85,6 +85,7 @@ class Investment(ABC):
         low_mask = self.cost_function_table['lower_bound']<=value
         relevant_row = self.cost_function_table[(up_mask)&(low_mask)]
         assert len(relevant_row) == 1
+
         cost = relevant_row['starting_value']+relevant_row['slope']*(value-relevant_row['lower_bound'])
         return cost.item()
 
@@ -119,10 +120,10 @@ class Investment(ABC):
         
 
     def sell_amount(self, amount:float, date:date):
-        remaining_amount = amount
+        remaining_amount = -amount
         combined_tax = 0
         sell_price = self.get_price_from_date(date)
-        combined_fee = self.calculate_sell_fee(sell_price * amount)
+        combined_fee = self.calculate_sell_fee(sell_price * remaining_amount)
 
         while remaining_amount > 0:
             first_order:OngoiningOrder = self.open_orders[0]
@@ -135,7 +136,8 @@ class Investment(ABC):
                 first_order.remaining_amount -= remaining_amount
 
             remaining_amount -= sell_amount
-            combined_tax += self.calculate_sell_tax(first_order.order_price, sell_price, sell_amount)
+            sell_tax = self.calculate_sell_tax(first_order.order_price, sell_price, sell_amount)
+            combined_tax += sell_tax
         
         self.total_amount -= amount
         sell_order = HistoryOrder(self.key_name, date, amount, sell_price, combined_fee, combined_tax)
@@ -160,7 +162,7 @@ class Investment(ABC):
 
     def calculate_sell_tax(self, buy_price:float, sell_price:float, amount:float) -> float:
         gains = (sell_price - buy_price) * amount
-        return gains*self.capital_gains_tax
+        return gains*self.percent_sell_tax
     
     def calculate_sell_fee(self, sell_value:float) -> float:
         return self.flat_sell_fee+self.percent_sell_fee*sell_value

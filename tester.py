@@ -4,6 +4,9 @@ import numpy as np
 import matplotlib.dates as mdates
 from numbers import Number
 from typing import Tuple, List
+from propagation import build_single_portfolio
+from copy import deepcopy
+from icecream import ic
 #typehinting
 import propagation
 import investmentclasses
@@ -11,8 +14,9 @@ import investmentclasses
 
 
 class Tester():
-    def __init__(self, portfolio:'propagation.Portfolio') -> None:
-        self.base_portfolio, self.variations, self.counter = self.identifiy_variations(portfolio)
+    def __init__(self, portfolio_dict:'propagation.Portfolio') -> None:
+        self.base_portfolio, self.variations, self.counter = self.identifiy_variations(portfolio_dict)
+        
         if self.counter == 0:
             self.make_run_plots()
         elif self.counter == 1:
@@ -20,7 +24,7 @@ class Tester():
         elif self.counter == 2:
             self.make_2D_plots(self.variations)
         else:
-            print('Tooo many variations.')
+            print('Too many variations.')
 
     def identifiy_variations(self, blueprint, found_patterns=None, counter=0)->Tuple['propagation.Portfolio',List, int]:
         if found_patterns is None:
@@ -47,7 +51,7 @@ class Tester():
             and isinstance(item[2], Number) and isinstance(item[3], str) and isinstance(item[4], str)
 
     def construct_variation_range(self, variation):
-        if variation[3] == 'lin':
+        if variation[3] == 'linear':
             return np.linspace(*variation[0:3])
         elif variation[3] == 'log':
             return np.logspace(*variation[0:3])
@@ -55,16 +59,16 @@ class Tester():
     def insert_specific(self, d:dict, search_value, variation_value)->'propagation.Portfolio':
         if isinstance(d, dict):
             for key, value in d.items():
-                d[key] = self.insert_specific(value)
+                d[key] = self.insert_specific(value, search_value, variation_value)
         elif isinstance(d, list):
-            return [self.insert_specific(item) for item in d]
-        elif d == search_value:  # If we find 'x', replace it with 1
+            return [self.insert_specific(item, search_value, variation_value) for item in d]
+        elif d == search_value:
             return variation_value
         return d
     
-    def determine_maximum_testing_timeframe(self):
-        start = self.portfolio.get_first_common_date()
-        end = self.portfolio.get_last_common_date()
+    def determine_maximum_testing_timeframe(self, portfolio):
+        start = portfolio.get_first_common_date()
+        end = portfolio.get_last_common_date()
         return (start, end)
     
     def test_portfolio_multiple_times(self, timeframe:tuple[date, date] | None = None, repetitions = 7):
@@ -88,20 +92,22 @@ class Tester():
         variation_range = self.construct_variation_range(variation)
         metric_values = []
         for step in variation_range:
-            local_portfolio = self.insert_specific(self.base_portfolio, 'x0', step)
-            timeframe = self.determine_maximum_testing_timeframe()
-            metrics = local_portfolio.simulate_timeinterval(*timeframe)
-            metric_values.append(metrics)
-        metric_values = np.array(metric_values).T
+            local_portfolio_struct = self.insert_specific(deepcopy(self.base_portfolio), 'x0', step)
+            local_portfolio = build_single_portfolio(local_portfolio_struct)
+            timeframe = self.determine_maximum_testing_timeframe(local_portfolio)
+            sim_trace = local_portfolio.simulate_timeinterval(*timeframe)
+            metric_values.append((sim_trace.internal_rate_of_return, sim_trace.total_costs_paid))
 
+        metric_values = np.array(metric_values).T
         fig, axes = plt.subplots(1,2, figsize = (8,3))
         for counter, ax in enumerate(axes):
-            ax.plot(variation_range, metric_values[counter])
+            ax.plot(variation_range, metric_values[counter], 'o')
             ax.set_xscale(variation[3])
             ax.set_xlabel(variation[4])
-        ax[0].set_ylabel('IRR')
-        ax[1].set_ylable('Costs')
-        fig.show()
+        axes[0].set_ylabel('IRR')
+        axes[1].set_ylabel('Costs')
+        fig.savefig('test.pdf', bbox_inches='tight')
+        plt.show()
 
     def make_2D_plots(self, variations):
         ...

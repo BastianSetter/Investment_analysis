@@ -25,6 +25,7 @@ class Depositer(ABC):
         self.triggers.append(trigger)
 
     def deposit(self, date:date, portfolio:'propagation.Portfolio'):
+        
         rebalance_today = any(trigger.check_trigger(date, portfolio) for trigger in self.triggers)
         if not rebalance_today: return 
 

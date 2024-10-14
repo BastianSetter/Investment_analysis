@@ -1,7 +1,7 @@
 import numpy as np
 from icecream import ic
 #typehinting
-from datetime import date
+from datetime import date as dt
 import triggers
 import propagation
 
@@ -20,12 +20,12 @@ class Rebalancer():
     def add_trigger(self, trigger:'triggers.Trigger'):
         self.triggers.append(trigger)
 
-    def rebalance(self, date:date, portfolio:'propagation.Portfolio'):
+    def rebalance(self, date:dt, portfolio:'propagation.Portfolio'):
         answers = [trigger.check_trigger(date, portfolio) for trigger in self.triggers]
         if any(answers): 
             self.execute_rebalance(date, portfolio)
 
-    def execute_rebalance(self, date:date, portfolio:'propagation.Portfolio'):
+    def execute_rebalance(self, date:dt, portfolio:'propagation.Portfolio'):
         #TODO: include a minimum transaction value, to reduce unnecessary fees
         #TODO: option to only buy with best rebalance
         
@@ -33,11 +33,13 @@ class Rebalancer():
             asset.update_cost_function_table(date)
         
         changes = [0]*len(portfolio.assets)
+
         while True:
-            #BEWARY: wann sind costs in changes und total value drin: Oscilieren?
-            #Woher kommen die 2€ übernach ausführung in test
             total_value = portfolio.calculate_total_value(date, changes = changes)
-            new_changes = [total_value*asset.target_ratio - asset.get_current_value(date) for asset in portfolio.assets]
+            new_changes = []
+            for asset in portfolio.assets:
+                change = total_value * asset.target_ratio - asset.get_current_value(date)
+                new_changes.append(change)
 
             if update_converged(changes, new_changes): break
             changes = new_changes
@@ -51,4 +53,4 @@ class Rebalancer():
                 sell_order = asset.sell_per_value(change, date)
                 portfolio.combined_order_history.append(sell_order)
                 portfolio.cash_position -= (change + sell_order.fees + sell_order.tax)
-
+    

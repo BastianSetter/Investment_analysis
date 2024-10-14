@@ -40,8 +40,17 @@ def plot_deviation_history(portfolio: 'propagation.Simulation_trace'):
     plt.show()
 
 
-def plot_return_over_1d_variable_variation(self):
-    ...
+def plot_1D_metrics(variation, variation_range, metric_values):
+    fig, axes = plt.subplots(1,2, figsize = (8,3))
+    for counter, ax in enumerate(axes):
+        ax.plot(variation_range, metric_values[counter], 'o')
+        ax.set_xscale(variation[3])
+        ax.set_xlabel(variation[4])
+    axes[0].set_ylabel('IRR')
+    axes[1].set_ylabel('Costs')
+    fig.savefig('test.pdf', bbox_inches='tight')
+    plt.show()
+
 
 #ideas:
 # deposit size over lost costs

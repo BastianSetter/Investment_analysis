@@ -47,6 +47,9 @@ class Simulation_trace:
             taxes += order.tax
         return fees + taxes
     
+    def get_metrics(self):
+        return (self.internal_rate_of_return, self.total_costs_paid)
+    
     # def calculate_lost_costs(self, sim_trace: 'propagation.Simulation_trace'):
     #     ...
     #     # run an additional simulation with no taxes and/or fees
@@ -77,20 +80,39 @@ class Portfolio():
         self.initial_cash = initial_cash# TODO: part of simulation restructure
         self.cash_position = 0
     
+
+    @classmethod
+    def from_dict(cls, blueprint: dict) -> 'Portfolio':
+        assets = []
+        for asset_bp in blueprint['asset']:
+            asset_class = asset_bp.pop('class')
+            asset = asset_class(**asset_bp)
+            assets.append(asset)
+
+        rebalancer = Rebalancer()
+        for rebalancer_bp in blueprint['rebalancer']:
+            trigger_class = rebalancer_bp.pop('class')
+            trigger = trigger_class(**rebalancer_bp)
+            rebalancer.add_trigger(trigger)
+
+        portfolio = cls(assets=assets, rebalancer=rebalancer, initial_cash=blueprint['initial_cash'])
+
+        for deposit_bp in blueprint['deposit']:
+            depositer_class = deposit_bp.pop('class')
+            depositer = depositer_class(**deposit_bp)
+            portfolio.add_depositer(depositer)
+
+        return portfolio
+
     def __str__(self) -> str:
-    # Initialize the string with the cash position
         result = f'Cash: {self.cash_position}\nAssets\n'
-        
-        # Append each asset's details to the result string
         for asset in self.assets:
             result += f'Key: {asset.key_name}; Ratio: {asset.target_ratio}; Amount: {asset.total_amount}\n'
-        
-        # Return the constructed string
         return result
     
     def __repr__(self) -> str:
         return self.__str__()
-
+    
     def add_depositer(self, depositer:'deposits.Depositer'):
         self.depositers.append(depositer)
 
@@ -110,21 +132,21 @@ class Portfolio():
 
             #rebalance
             self.rebalancer.rebalance(date, self)
-
             #performance tracking for later visualisation
             if date is end_date:
                 break
             daily_stats = self.get_daily_stats(date)
             self.portfolio_history.append(daily_stats)
+            
 
         # self.sell_all(date)
         # daily_stats = self.get_daily_stats(date)
         # self.portfolio_history.append(daily_stats)
+
         simulation_trace = Simulation_trace(np.array(self.portfolio_history), self.combined_order_history, self.deposits)
         return simulation_trace
             
     def init_simulation(self, date):
-        #TODO reset not working
         self.portfolio_history = []
         self.combined_order_history = []
         self.deposits = []
@@ -132,6 +154,8 @@ class Portfolio():
         self.cash_position = self.initial_cash
         deposit = Deposit(date, self.initial_cash)
         self.deposits.append(deposit)
+        for asset in self.assets:
+            asset.reset()
 
     def assert_all_assets_valid_in_timeinterval(self, start_date: date, end_date: date):
         for asset in self.assets:
@@ -185,24 +209,3 @@ class Portfolio():
     # def handle_holding_cost(self):
     #     pass
 
-def build_single_portfolio(blueprint: dict) -> Portfolio:
-    assets = []
-    for asset_bp in blueprint['asset']:
-        asset_class = asset_bp.pop('class')
-        asset = asset_class(**asset_bp)
-        assets.append(asset)
- 
-    rebalancer = Rebalancer()
-    for rebalancer_bp in blueprint['rebalancer']:
-        trigger_class = rebalancer_bp.pop('class')
-        trigger = trigger_class(**rebalancer_bp)
-        rebalancer.add_trigger(trigger)
-
-    portfolio = Portfolio(assets=assets, rebalancer = rebalancer, initial_cash=blueprint['initial_cash'])
-
-    for deposit_bp in blueprint['deposit']:
-        depositer_class = deposit_bp.pop('class')
-        depositer = depositer_class(**deposit_bp)
-        portfolio.add_depositer(depositer)
-
-    return portfolio

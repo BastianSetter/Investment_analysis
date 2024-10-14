@@ -59,6 +59,11 @@ class Investment(ABC):
         self.cost_function_table = pd.DataFrame(data = [[0,np.inf,0,0]], columns=['lower_bound', 'upper_bound', 'slope', 'starting_value'])
         self.key_name = key
 
+    def reset(self):
+        self.total_amount = 0
+        self.open_orders = deque([])
+        self.cost_function_table = pd.DataFrame(data = [[0,np.inf,0,0]], columns=['lower_bound', 'upper_bound', 'slope', 'starting_value'])
+
     def get_price_from_date(self, date:date) -> float:
         index = np.argwhere(self.dates==date)[0][0]
         price = self.price[index]
